@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>今天吃什麼？</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "PingFang TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #f9fafb;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 { margin: 8px 0 6px; text-align: center; font-size: 28px; }
+    .subtitle {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .layout { max-width: 480px; width: 100%; }
+
+    /* 表單 */
+    .form-card {
+      background: #020617;
+      padding: 16px;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+      margin-bottom: 24px;
+      border: 1px solid rgba(148,163,184,0.3);
+    }
+    label { display: block; margin: 8px 0 4px; font-size: 14px; color: #e5e7eb; }
+    select, input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #4b5563;
+      font-size: 14px;
+      margin-bottom: 4px;
+      background: #020617;
+      color: #f9fafb;
+    }
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+    .form-row > div { flex: 1; }
+
+    .primary-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      border: none;
+      border-radius: 999px;
+      color: #111827;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 10px 25px rgba(249,115,22,0.5);
+    }
+
+    /* 卡片區 */
+    .card-wrapper {
+      position: relative;
+      height: 380px;
+      margin-bottom: 14px;
+    }
+
+    .card-placeholder {
+      height: 100%;
+      border-radius: 22px;
+      border: 1px dashed rgba(148,163,184,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-size: 14px;
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    /* 餐廳卡片 */
+    .card {
+      position: absolute; inset: 0;
+      background: #1e293b;
+      border-radius: 22px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(12px) scale(0.96);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      box-shadow: 0 25px 40px rgba(0,0,0,0.5);
+    }
+    .card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .card-image {
+      height: 180px;
+      width: 100%;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .chip {
+      display: inline-block;
+      background: rgba(15,118,110,0.25);
+      color: #5eead4;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      margin: 10px 16px 6px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0 16px 4px;
+    }
+
+    .status-open { color: #4ade80; font-size: 13px; margin-left:16px;}
+    .status-closed { color: #f87171; font-size: 13px; margin-left:16px;}
+
+    .info-line {
+      font-size: 14px;
+      margin: 4px 16px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tag-row {
+      margin: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid rgba(148,163,184,0.4);
+      border-radius: 999px;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #9ca3af;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 滑動按鈕 */
+    .swipe-actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .swipe-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .dislike {
+      background: #1e293b;
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    .like {
+      background: #f97316;
+      color: #111;
+      border: none;
+    }
+
+    /* 收藏區整體 */
+    .liked-section {
+      max-width: 480px;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .liked-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .liked-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #f9fafb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .liked-header-title span:first-child {
+      font-size: 18px;
+    }
+
+    .liked-count {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    /* 收藏卡片 */
+    .liked-card {
+      background: rgba(30,41,59,0.65);
+      backdrop-filter: blur(6px);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(148,163,184,0.35);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .liked-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .liked-name a {
+      font-weight: 600;
+      font-size: 15px;
+      color: #f8fafc;
+      text-decoration: none;
+    }
+
+    .liked-name a:hover {
+      text-decoration: underline;
+    }
+
+    .liked-address a {
+      display: inline-block;
+      font-size: 12px;
+      color: #93c5fd;
+      text-decoration: underline;
+      margin-top: 3px;
+    }
+
+    .liked-tags {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .liked-tag-pill {
+      padding: 3px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.3);
+      color: #e2e8f0;
+    }
+
+    .liked-meta {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: right;
+      white-space: nowrap;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .liked-meta-top {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .liked-star {
+      color: #fbbf24;
+      font-size: 14px;
+    }
+
+    .liked-distance {
+      font-size: 12px;
+      margin-top: 6px;
+      color: #cbd5e1;
+    }
+
+    .liked-index {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>今天吃什麼？</h1>
+  <div class="subtitle">滑卡決定你的天選餐廳 ✨</div>
+
+  <div class="layout">
+
+    <!-- 表單 -->
+    <div class="form-card">
+      <div class="form-row">
+        <div>
+          <label>分類</label>
+          <select id="category">
+            <option value="日式">日式</option>
+            <option value="美式">美式</option>
+            <option value="法式">法式</option>
+            <option value="義式">義式</option>
+            <option value="韓式">韓式</option>
+            <option value="台式">台式</option>
+          </select>
+        </div>
+        <div>
+          <label>預算/人</label>
+          <input type="number" id="budget" value="300">
+        </div>
+      </div>
+
+      <label>地區 / 城市</label>
+      <input id="region" placeholder="例：台北市大安區">
+
+      <button id="startBtn" class="primary-btn">開始抽餐廳 🍜</button>
+    </div>
+
+    <!-- 卡片 -->
+    <div class="card-wrapper">
+      <div id="cardPlaceholder" class="card-placeholder">
+        按「開始抽餐廳」讓美食搜尋器告訴你今天吃什麼 🍱✨
+      </div>
+      <div id="restaurantCard" class="card"></div>
+    </div>
+
+    <!-- 操作按鈕 -->
+    <div class="swipe-actions">
+      <button id="dislikeBtn" class="swipe-btn dislike">👎 不要</button>
+      <button id="likeBtn" class="swipe-btn like">❤️ 喜歡</button>
+    </div>
+
+    <!-- 收藏清單 -->
+    <div id="likedSection" class="liked-section" style="display:none;">
+      <div id="likedList"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // DOM elements
+    const categoryEl = document.getElementById("category");
+    const regionEl = document.getElementById("region");
+    const budgetEl = document.getElementById("budget");
+    const cardPlaceholder = document.getElementById("cardPlaceholder");
+    const restaurantCard = document.getElementById("restaurantCard");
+    const likedSectionEl = document.getElementById("likedSection");
+    const likedListEl = document.getElementById("likedList");
+
+    // 狀態
+    let filteredList = [];
+    let currentIndex = 0;
+
+    let likedItems = [];
+    try {
+      const raw = localStorage.getItem("likedRestaurants");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) likedItems = parsed.filter(Boolean);
+      }
+    } catch (e) {
+      likedItems = [];
+    }
+
+    // 綁定按鈕
+    document.getElementById("dislikeBtn").addEventListener("click", handleDislike);
+    document.getElementById("likeBtn").addEventListener("click", handleLike);
+    document.getElementById("startBtn").addEventListener("click", startSwipe);
+
+    // 一進頁面先畫出收藏
+    updateLikedUI();
+
+    // 開始抽餐廳
+    async function startSwipe() {
+      const categoryValue = categoryEl.value;
+      const regionText = regionEl.value.trim();
+      const budgetValue = Number(budgetEl.value);
+
+      if (!regionText) {
+        alert("請先輸入地區，例如：台北市大安區");
+        return;
+      }
+      if (!budgetValue || budgetValue <= 0) {
+        alert("請輸入合理的預算金額");
+        return;
+      }
+
+      cardPlaceholder.style.display = "flex";
+      cardPlaceholder.innerHTML = "正在向 Google 問有什麼好吃的… 🍣";
+      restaurantCard.classList.remove("visible");
+
+      try {
+        const res = await fetch(`/api/restaurants`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: categoryValue,
+            regionText,
+            budgetPerPerson: budgetValue
+          })
+        });
+
+        if (!res.ok) throw new Error("伺服器回應錯誤");
+
+        const data = await res.json();
+
+        filteredList = (data || []).map(r => ({
+          ...r,
+          category: categoryValue,
+          budget: budgetValue,
+          tags: [
+            categoryValue,
+            budgetValue < 300 ? "平價" : "小奢侈",
+            r.rating >= 4.3 ? "高評分" : null
+          ].filter(Boolean)
+        }));
+
+        currentIndex = 0;
+
+        if (!filteredList.length) {
+          cardPlaceholder.style.display = "flex";
+          cardPlaceholder.innerHTML = "這個條件找不到餐廳 QQ<br>試著換個地區或預算吧～";
+          restaurantCard.classList.remove("visible");
+          return;
+        }
+
+        showCurrentCard();
+      } catch (err) {
+        console.error(err);
+        cardPlaceholder.style.display = "flex";
+        cardPlaceholder.innerHTML = "跟 Google 聯絡失敗了 QQ<br>確認後端有沒有在跑或 API Key 設定。";
+        restaurantCard.classList.remove("visible");
+      }
+    }
+
+    // 顯示目前卡片
+    function showCurrentCard() {
+      if (!filteredList.length || currentIndex >= filteredList.length) {
+        showEndCard();
+        return;
+      }
+
+      const r = filteredList[currentIndex];
+
+      cardPlaceholder.style.display = "none";
+      restaurantCard.classList.add("visible");
+
+      restaurantCard.innerHTML = `
+        <div class="card-image" style="background-image:url('${r.photo || ""}')"></div>
+        <div class="chip">${r.category} · 約 ${r.budget} 元</div>
+        <div class="card-title">${r.name}</div>
+        ${
+          r.openStatus === "營業中"
+            ? `<div class="status-open">🟢 ${r.openStatus}</div>`
+            : `<div class="status-closed">🔴 ${r.openStatus}</div>`
+        }
+        <div class="info-line">
+          📍 <a href="${r.googleMapsUrl || "#"}" target="_blank" style="color:#93c5fd;">
+            ${r.address}
+          </a>
+        </div>
+        <div class="info-line">📏 距離：${r.distanceKm} km</div>
+        <div class="info-line">📞 ${r.phone || "無提供"}</div>
+        <div class="tag-row">
+          ${(r.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}
+        </div>
+        <div class="card-footer">
+          <span>不喜歡就繼續滑，喜歡就收進口袋。</span>
+          <a href="${r.googleMapsUrl || "#"}" target="_blank" style="color:#38bdf8;">地圖 ↗</a>
+        </div>
+      `;
+    }
+
+    // 沒卡片時的畫面
+    function showEndCard() {
+      restaurantCard.classList.add("visible");
+      cardPlaceholder.style.display = "none";
+
+      if (!likedItems.length) {
+        restaurantCard.innerHTML = `
+          <div class="card-title" style="margin:16px;">今天你誰都不愛 😭</div>
+          <div class="info-line">可以再按一次「開始抽餐廳」，宇宙會再給你一輪新店。</div>
+        `;
+        return;
+      }
+
+      const last = likedItems[likedItems.length - 1];
+
+      restaurantCard.innerHTML = `
+        <div class="card-image" style="background-image:url('${last.photo || ""}')"></div>
+        <div class="chip">💘 你的天選餐廳</div>
+        <div class="card-title">${last.name}</div>
+        <div class="info-line">
+          📍 <a href="${last.googleMapsUrl || "#"}" target="_blank" style="color:#93c5fd;">
+            ${last.address}
+          </a>
+        </div>
+        <div class="info-line">⭐ ${last.rating ?? "—"} · 距離 ${last.distanceKm} km</div>
+        <div class="card-footer">
+          <span>就讓這家成為今天的晚餐吧。</span>
+          <a href="${last.googleMapsUrl || "#"}" target="_blank" style="color:#38bdf8;">打開地圖 ↗</a>
+        </div>
+      `;
+    }
+
+    // 左右按鈕
+    function handleDislike() {
+      if (!filteredList.length) return;
+      currentIndex++;
+      showCurrentCard();
+    }
+
+    function handleLike() {
+      if (!filteredList.length || currentIndex >= filteredList.length) return;
+      const r = filteredList[currentIndex];
+      likedItems.push(r);
+      saveLiked();
+      updateLikedUI();
+      currentIndex++;
+      showCurrentCard();
+    }
+
+    // 收藏清單 UI
+    function updateLikedUI() {
+      if (!likedItems.length) {
+        likedSectionEl.style.display = "none";
+        likedListEl.innerHTML = "";
+        return;
+      }
+
+      likedSectionEl.style.display = "block";
+
+      const headerHtml = `
+        <div class="liked-header">
+          <div class="liked-header-title">
+            <span>📌</span>
+            <span>收藏的餐廳</span>
+          </div>
+          <div class="liked-count">共 ${likedItems.length} 間</div>
+        </div>
+      `;
+
+      const listHtml = likedItems
+        .filter(Boolean)
+        .map((r, idx) => {
+          const link = r.googleMapsUrl || r.reservationUrl || "#";
+          const tags = (r.tags || [])
+            .map(t => `<span class="liked-tag-pill">${t}</span>`)
+            .join("");
+
+          return `
+            <div class="liked-card">
+              <div class="liked-main">
+                <div class="liked-name">
+                  <a href="${link}" target="_blank">${r.name}</a>
+                </div>
+                <div class="liked-address">
+                  <a href="${link}" target="_blank">${r.address}</a>
+                </div>
+                <div class="liked-tags">${tags}</div>
+              </div>
+              <div class="liked-meta">
+                <div class="liked-meta-top">
+                  <span class="liked-star">★</span>
+                  <span>${r.rating ?? "—"}</span>
+                </div>
+                <div class="liked-distance">${r.distanceKm} km</div>
+                <div class="liked-index">#${idx + 1}</div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      likedListEl.innerHTML = headerHtml + listHtml;
+    }
+
+    function saveLiked() {
+      localStorage.setItem("likedRestaurants", JSON.stringify(likedItems));
+    }
+  </script>
+</body>
+</html>

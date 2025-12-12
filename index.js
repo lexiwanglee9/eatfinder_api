@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
-
+const path = require("path");
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -31,6 +31,12 @@ function mapBudgetToPriceLevel(budget) {
   if (budget < 800) return { minPrice: 2, maxPrice: 3 };
   return { minPrice: 3, maxPrice: 4 };
 }
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 app.post("/api/restaurants", async (req, res) => {
   try {
